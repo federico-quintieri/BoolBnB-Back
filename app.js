@@ -5,8 +5,8 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT;
-// Commento fatto da fede
-// Configuro cors per autorizzare un certo dominio frontend
+const bnb_router = require("./routes/bnb_routes");
+
 app.use(
     cors({
       origin: process.env.URL_FRONT, // Sostituisci con il dominio del tuo frontend
@@ -17,6 +17,7 @@ app.use(
 app.use(express.json());
 
 // Definizione Rotte
+app.use("/immobili", bnb_router);
 
 // Mettiamo in ascolto il server
 app.listen(port, () => {
