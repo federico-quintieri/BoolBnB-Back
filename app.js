@@ -6,6 +6,7 @@ const cors = require("cors");
 const app = express();
 const port = process.env.PORT;
 const bnb_router = require("./routes/bnb_routes");
+// Ciao sono del main
 // Sono del branch Rotte_Base
 app.use(
     cors({
