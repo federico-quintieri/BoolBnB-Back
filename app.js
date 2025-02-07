@@ -5,7 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT;
-
+// Commento fatto da fede
 // Configuro cors per autorizzare un certo dominio frontend
 app.use(
     cors({
