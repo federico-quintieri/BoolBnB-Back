@@ -4,5 +4,4 @@ Vedere i dettagli di un immobile (RF3) → GET /api/immobili/{id}
 Lasciare una recensione (RF5) → POST /api/immobili/{id}/recensioni
 Aggiungere/rimuovere un cuoricino (gradimento) → POST /api/immobili/{id}/cuoricini
 
-Questa dipende da come si imposta...
-TEstssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+
