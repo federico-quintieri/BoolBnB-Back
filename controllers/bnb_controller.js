@@ -1,9 +1,18 @@
 // Importo file per connessione a db
 const database = require("../db_connection");
 
-// Callback index immobili
+//--- Callback index immobili ---\\
 const index = (req, res) => {
-  res.json("Mostra tutti gli immobili");
+  // Faccio query per mostrarmi tutti gli immobili
+  const sql = `SELECT * FROM immobili`;
+
+  // Invio query al database
+  database.query(sql,(err, result) => {
+    if (err)
+      return res.status(500).json({ message: "Errore interno al server" });
+
+    return res.status(200).json(result);
+  });
 };
 
 //--- Callback per salvare un immobile ---\\
