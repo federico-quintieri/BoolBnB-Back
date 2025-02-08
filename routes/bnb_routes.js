@@ -12,7 +12,7 @@ router.post("/", controller.storeImmobile);
 router.get("/:id", controller.detailImmobile);
 
 //Endpoint per salvare la recensione dell'immobile
-router.post("/review", controller.addReviewImmobile);
+router.post("/review/:id", controller.addReviewImmobile);
 
 //Endpoint per aggiungere like all'immobile
 router.post("/addLike", controller.addLikeImmobile);

@@ -91,7 +91,7 @@ const detailImmobile = (req, res) => {
     // Check errore server
     if (err)
       return res.status(500).json({ message: "Errore interno al server" });
-    
+
     // Check se la lunghezza della rispota API è array vuoto (query no good)
     if (result.length == 0) {
       return res.status(404).json({ message: "Non c'è id che cerchi" });
@@ -103,8 +103,40 @@ const detailImmobile = (req, res) => {
 };
 //Callback per salvare recensione immobile
 const addReviewImmobile = (req, res) => {
-  res.json("Endpoint per salvare una recensione dell'immobile");
+  // Prendo id immobile
+  const immobileID = parseInt(req.params.id);
+
+  // Prendo oggetto body dalla richiesta che contiene la recensione effettiva
+  const bodyApi = req.body;
+
+  const sql = `
+    INSERT INTO recensioni 
+    (nome, commento, cuoricini, giorni_permanenza, creato_in, id_utente_interessato, id_proprietario, id_immobile) 
+    VALUES (?, ?, ?, ?, NOW(), ?, ?, ?);
+  `;
+
+  database.query(
+    sql,
+    [
+      bodyApi.nome,
+      bodyApi.commento,
+      bodyApi.cuoricini,
+      bodyApi.giorni_permanenza,
+      bodyApi.id_utente_interessato,
+      bodyApi.id_proprietario,
+      immobileID,
+    ],
+    (err, result) => {
+      if (err)
+        return res.status(500).json({ message: "Errore interno al server" });
+
+      return res.status(201).json({
+        message: "Recensione salvata con successo",
+      });
+    }
+  );
 };
+
 //Callback per aggiungere LIKE all'immobile
 const addLikeImmobile = (req, res) => {
   res.json("Endpoint per aggiungere un like all'immobile");
