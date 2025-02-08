@@ -20,8 +20,4 @@ router.post("/addLike", controller.addLikeImmobile);
 //Endpoint per rimuovere like all'immobile
 router.delete("/removeLike", controller.removeLikeImmobile);
 
-
-
-
-
 module.exports = router;
