@@ -13,6 +13,10 @@ const connessione = mysql.createConnection({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
 });
-
+//test connessione al Database
+connessione.connect((err) => {
+  if (err) throw err;
+  console.log("Connesso al DataBase!");
+});
 // Esporto connessione da utilizzare nelle callback controller
 module.exports = connessione;
