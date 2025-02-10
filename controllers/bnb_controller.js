@@ -4,10 +4,27 @@ const database = require("../db_connection");
 //--- Callback index immobili ---\\
 const mostraImmobili = (req, res) => {
   // Faccio query per mostrarmi tutti gli immobili
-  const sql = `SELECT * FROM immobili`;
+  let sql = `SELECT * FROM immobili`;
+  const filters = req.query;
+  console.log(filters.search);
 
+
+  const params = [];
+  const conditions = [];
+  //filtro di ricerca
+  if (filters.search) {
+    //aggiungo la query a conditions
+    conditions.push(`immobili.tipo LIKE ?`);
+    //aggiungo i valori da ricercare
+    params.push(`%${filters.search}%`);
+  }
+  //se ci sono più query vengono concatenate
+  if (conditions.length > 0) {
+    sql += ` WHERE ${conditions.join(" AND ")}`;
+  }
+  
   // Invio query al database
-  database.query(sql, (err, result) => {
+  database.query(sql, params, (err, result) => {
     if (err)
       return res.status(500).json({ message: "Errore interno al server" });
 
