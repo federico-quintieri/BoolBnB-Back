@@ -9,7 +9,7 @@ router.get("/", controller.mostraImmobili);
 router.post("/", controller.storeImmobile);
 
 //Endpoint per vedere i dettagli
-router.get("/:id", controller.detailImmobile);
+router.get("/:slug", controller.detailImmobile);
 
 //Endpoint per salvare la recensione dell'immobile
 router.post("/review/:id", controller.addReviewImmobile);

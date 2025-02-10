@@ -4,30 +4,29 @@ const database = require("../db_connection");
 //--- Callback index immobili ---\\
 const mostraImmobili = (req, res) => {
   // Faccio query per mostrarmi tutti gli immobili
-  let sql = `SELECT * FROM immobili`;
+  let sql = `SELECT real_estate.*, type_real_estate.type AS tipo 
+             FROM real_estate 
+             LEFT JOIN type_real_estate ON real_estate.id_type_real_estate = type_real_estate.id`;
+
+  // Filtro ricerca
+
   const filters = req.query;
-  console.log(filters.search);
-
-
   const params = [];
   const conditions = [];
-  //filtro di ricerca
+
   if (filters.search) {
-    //aggiungo la query a conditions
-    conditions.push(`immobili.tipo LIKE ?`);
-    //aggiungo i valori da ricercare
+    conditions.push(`type_real_estate.type LIKE ?`);
     params.push(`%${filters.search}%`);
   }
-  //se ci sono più query vengono concatenate
+
   if (conditions.length > 0) {
     sql += ` WHERE ${conditions.join(" AND ")}`;
   }
-  
-  // Invio query al database
+
+  // Invio query al database modificata in base a filtro ricerca
   database.query(sql, params, (err, result) => {
     if (err)
       return res.status(500).json({ message: "Errore interno al server" });
-
     return res.status(200).json(result);
   });
 };
@@ -73,89 +72,65 @@ const storeImmobile = (req, res) => {
 
 //Callback per vedere i dettagli immobile
 const detailImmobile = (req, res) => {
-  // Prima devo fare query che mi controlla se immobile esiste in base ad id
-  const immobileID = parseInt(req.params.id);
+  const immobileSlug = req.params.slug;
   const sql = `
-    SELECT 	immobili.id AS immobile_id,
-        immobili.titolo,
-        immobili.descrizione,
-        immobili.stanze,
-        immobili.letti,
-        immobili.bagni,
-        immobili.metri_quadrati,
-        immobili.citta,
-        immobili.indirizzo,
-        immobili.tipo,
-        immobili.immagine,
-        immobili.prezzo,
-        immobili.creato_in AS immobile_creato_in,
-        immobili.id_proprietario,
-        recensioni.id AS recensione_id,
-        recensioni.nome AS recensore,
-        recensioni.commento,
-        recensioni.voto,
-        recensioni.giorni_permanenza,
-        recensioni.creato_in AS recensione_creato_in,
-        recensioni.id_utente_interessato,
-        count(cuoricini.id)
-      from immobili
-      left join recensioni on recensioni.id_immobile= immobili.id
-      left join cuoricini on cuoricini.id_immobile=immobili.id
-      where immobili.id = 3
-      group by immobili.id, recensioni.id
+    SELECT real_estate.*, 
+           type_real_estate.type AS tipo, 
+           feedback.id AS feedback_id, 
+           feedback.name AS recensore, 
+           feedback.comment AS commento, 
+           feedback.vote AS voto, 
+           feedback.days_of_stay AS giorni_permanenza, 
+           feedback.created_in AS recensione_creato_in
+    FROM real_estate
+    LEFT JOIN type_real_estate ON real_estate.id_type_real_estate = type_real_estate.id
+    LEFT JOIN feedback ON feedback.id_real_estate = real_estate.id
+    WHERE real_estate.slug = ?
   `;
 
-  // Invio la query
-  database.query(sql, [immobileID], (err, result) => {
-    // Check errore server
-    if (err)
-      return res.status(500).json({ message: "Errore interno al server" });
+  database.query(sql, [immobileSlug], (err, result) => {
+    if (err) return res.status(500).json({ message: "Errore interno al server" });
 
-    // Check se la lunghezza della rispota API è array vuoto (query no good)
     if (result.length == 0) {
       return res.status(404).json({ message: "Non c'è id che cerchi" });
     }
 
-    // Estrarre i dati dell'immobile dalla prima riga
     const immobile = {
-      immobile_id: result[0].immobile_id,
-      titolo: result[0].titolo,
-      descrizione: result[0].descrizione,
-      stanze: result[0].stanze,
-      letti: result[0].letti,
-      bagni: result[0].bagni,
-      metri_quadrati: result[0].metri_quadrati,
-      citta: result[0].citta,
-      indirizzo: result[0].indirizzo,
+      id: result[0].id,
+      slug: result[0].slug,
+      owner_email: result[0].owner_email,
+      owner_name: result[0].owner_name,
+      title: result[0].title,
+      description: result[0].description,
+      rooms: result[0].rooms,
+      beds: result[0].beds,
+      bathrooms: result[0].bathrooms,
+      square_meters: result[0].square_meters,
+      city: result[0].city,
+      address: result[0].address,
+      images: result[0].images,
+      created_in: result[0].created_in,
       tipo: result[0].tipo,
-      immagine: result[0].immagine,
-      prezzo: result[0].prezzo,
-      immobile_creato_in: result[0].immobile_creato_in,
-      id_proprietario: result[0].id_proprietario,
-      numero_like: result[0].numero_like, // Aggiungiamo il conteggio dei like
-      recensioni: [], // 2️⃣ Array vuoto che riempiremo dopo
+      recensioni: [],
     };
 
-    // Aggiungere recensioni (se esistono)
     result.forEach((row) => {
-      if (row.recensione_id) {
-        // Se c'è una recensione
+      if (row.feedback_id) {
         immobile.recensioni.push({
-          recensione_id: row.recensione_id,
+          id: row.feedback_id,
           recensore: row.recensore,
           commento: row.commento,
           voto: row.voto,
           giorni_permanenza: row.giorni_permanenza,
           recensione_creato_in: row.recensione_creato_in,
-          id_utente_interessato: row.id_utente_interessato,
         });
       }
     });
 
-    // Restituire l'oggetto immobile con le recensioni raccolte
     return res.status(200).json(immobile);
   });
 };
+
 //Callback per salvare recensione immobile
 const addReviewImmobile = (req, res) => {
   // Prendo id immobile
