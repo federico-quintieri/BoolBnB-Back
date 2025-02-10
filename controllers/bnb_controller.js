@@ -59,34 +59,33 @@ const detailImmobile = (req, res) => {
   // Prima devo fare query che mi controlla se immobile esiste in base ad id
   const immobileID = parseInt(req.params.id);
   const sql = `
-    SELECT 
-        i.id AS immobile_id,
-        i.titolo,
-        i.descrizione,
-        i.stanze,
-        i.letti,
-        i.bagni,
-        i.metri_quadrati,
-        i.citta,
-        i.indirizzo,
-        i.tipo,
-        i.immagine,
-        i.prezzo,
-        i.creato_in AS immobile_creato_in,
-        i.id_proprietario,
-        COUNT(c.id) AS numero_like,
-        r.id AS recensione_id,
-        r.nome AS recensore,
-        r.commento,
-        r.voto,
-        r.giorni_permanenza,
-        r.creato_in AS recensione_creato_in,
-        r.id_utente_interessato
-    FROM immobili i
-    LEFT JOIN recensioni r ON i.id = r.id_immobile
-    LEFT JOIN cuoricini c ON i.id = c.id_immobile
-    WHERE i.id = ?
-    GROUP BY i.id, r.id;
+    SELECT 	immobili.id AS immobile_id,
+        immobili.titolo,
+        immobili.descrizione,
+        immobili.stanze,
+        immobili.letti,
+        immobili.bagni,
+        immobili.metri_quadrati,
+        immobili.citta,
+        immobili.indirizzo,
+        immobili.tipo,
+        immobili.immagine,
+        immobili.prezzo,
+        immobili.creato_in AS immobile_creato_in,
+        immobili.id_proprietario,
+        recensioni.id AS recensione_id,
+        recensioni.nome AS recensore,
+        recensioni.commento,
+        recensioni.voto,
+        recensioni.giorni_permanenza,
+        recensioni.creato_in AS recensione_creato_in,
+        recensioni.id_utente_interessato,
+        count(cuoricini.id)
+      from immobili
+      left join recensioni on recensioni.id_immobile= immobili.id
+      left join cuoricini on cuoricini.id_immobile=immobili.id
+      where immobili.id = 3
+      group by immobili.id, recensioni.id
   `;
 
   // Invio la query
