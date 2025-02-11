@@ -3,21 +3,15 @@ const router = express.Router();
 const controller = require("../controllers/bnb_controller");
 
 // Endpoint MostraImmobili
-router.get("/", controller.mostraImmobili);
+router.get("/", controller.showRealEstate);
 
 //Endpoint SalvaImmobile
-router.post("/", controller.storeImmobile);
+router.post("/", controller.storeRealEstate);
 
 //Endpoint per vedere i dettagli
-router.get("/:slug", controller.detailImmobile);
+router.get("/:slug", controller.detailRealEstate);
 
 //Endpoint per salvare la recensione dell'immobile
-router.post("/review/:id", controller.addReviewImmobile);
-
-//Endpoint per aggiungere like all'immobile
-router.post("/addLike", controller.addLikeImmobile);
-
-//Endpoint per rimuovere like all'immobile
-router.delete("/removeLike", controller.removeLikeImmobile);
+router.post("/review/:id", controller.addFeedback);
 
 module.exports = router;

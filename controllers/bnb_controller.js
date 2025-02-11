@@ -2,25 +2,40 @@
 const database = require("../db_connection");
 
 //--- Callback index immobili ---\\
-const mostraImmobili = (req, res) => {
+const showRealEstate = (req, res) => {
   // Faccio query per mostrarmi tutti gli immobili
   let sql = `SELECT real_estate.*, type_real_estate.type AS tipo 
              FROM real_estate 
-             LEFT JOIN type_real_estate ON real_estate.id_type_real_estate = type_real_estate.id`;
+             LEFT JOIN type_real_estate ON real_estate.id_type_real_estate = type_real_estate.id
+             `;
 
   // Filtro ricerca
-
-  const filters = req.query;
+  const filters = req.query;//prelevo le query string
   const params = [];
   const conditions = [];
 
-  if (filters.search) {
-    conditions.push(`type_real_estate.type LIKE ?`);
-    params.push(`%${filters.search}%`);
-  }
+  console.log(filters);
 
-  if (conditions.length > 0) {
-    sql += ` WHERE ${conditions.join(" AND ")}`;
+
+  //  if (filters.search) {
+  //    conditions.push(`type_real_estate.type LIKE ?`);
+  //    params.push(`%${filters.search}%`);
+  //  }
+
+  for (const key in req.query) {        //cicla tutte le chiavi in req.query
+    if (key !== "search") {             //controlla che la chiave sia diversa da search
+      conditions.push(`${key} LIKE ?`);    //in coditions viene aggiunto il campo da cercare
+      params.push(`%${req.query[key]}%`);      //in params viene aggiunto il valore del campo 
+    }
+  }
+  //console.log("condizioni " +conditions);
+  //console.log("parametri " +params);
+  
+
+  if (conditions.length > 0) { 
+    sql += ` WHERE ${conditions.join(" AND ")}`;   //concatena le condizioni mettendo un AND tra ciascuna
+    //console.log(sql);
+    
   }
 
   // Invio query al database modificata in base a filtro ricerca
@@ -31,8 +46,10 @@ const mostraImmobili = (req, res) => {
   });
 };
 
+
+
 //--- Callback per salvare un immobile ---\\
-const storeImmobile = (req, res) => {
+const storeRealEstate = (req, res) => {
   // Prendo body dal richiesta API (oggetto)
   const bodyApi = req.body;
 
@@ -70,8 +87,10 @@ const storeImmobile = (req, res) => {
   );
 };
 
+
+
 //Callback per vedere i dettagli immobile
-const detailImmobile = (req, res) => {
+const detailRealEstate = (req, res) => {
   const immobileSlug = req.params.slug;
   const sql = `
     SELECT real_estate.*, 
@@ -131,8 +150,10 @@ const detailImmobile = (req, res) => {
   });
 };
 
+
+
 //Callback per salvare recensione immobile
-const addReviewImmobile = (req, res) => {
+const addFeedback = (req, res) => {
   // Prendo id immobile
   const immobileID = parseInt(req.params.id);
 
@@ -167,57 +188,13 @@ const addReviewImmobile = (req, res) => {
   );
 };
 
-//Callback per aggiungere LIKE all'immobile
-const addLikeImmobile = (req, res) => {
-  // Prendo id immobile e id utente dal body
-  const { id_immobile, id_utente } = req.body;
 
-  const checkSql = `SELECT * FROM cuoricini WHERE id_immobile = ? AND id_utente = ?`;
-
-  database.query(checkSql, [id_immobile, id_utente], (err, result) => {
-    if (err) return res.status(500).json({ message: "Errore server" });
-
-    if (result.length > 0)
-      return res.status(400).json({ message: "Hai già messo il like" });
-
-    const insertSql = `INSERT INTO cuoricini (id_immobile,id_utente,creato_in) VALUES (?,?,NOW())`;
-
-    database.query(insertSql, [id_immobile, id_utente], (err, result) => {
-      if (err) return res.status(500).json({ message: "Errore server" });
-
-      return res.status(201).json({ message: "Like aggiunto con successo" });
-    });
-  });
-};
-
-//Callback per rimuovere LIKE all'immobile
-const removeLikeImmobile = (req, res) => {
-  // Prendo id immobile e id utente dal body della richiesta
-  const { id_immobile, id_utente } = req.body;
-
-  // Query per cancellare un certo id dalla tabella cuoricini
-  const deleteSql = `DELETE FROM cuoricini WHERE id_immobile = ? AND id_utente = ?`;
-
-  // Invio query
-  database.query(deleteSql, [id_immobile, id_utente], (err, result) => {
-    // Check errore server
-    if (err) return res.status(500).json({ message: "Errore server" });
-
-    // Check like non trovato
-    if (result.affectedRows === 0)
-      return res.status(400).json({ message: "Nessun like trovato" });
-
-    // Cancellazione corretta del like
-    return res.status(200).json({ message: "Like rimosso con successo" });
-  });
-};
 
 // Esporto callbacks
 module.exports = {
-  mostraImmobili,
-  storeImmobile,
-  detailImmobile,
-  addReviewImmobile,
-  addLikeImmobile,
-  removeLikeImmobile,
+  showRealEstate,
+  storeRealEstate,
+  detailRealEstate,
+  addFeedback,
+
 };
