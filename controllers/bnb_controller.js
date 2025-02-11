@@ -96,11 +96,11 @@ const detailRealEstate = (req, res, next) => {
       if (row.feedback_id) {
         immobile.recensioni.push({
           id: row.feedback_id,
-          recensore: row.recensore,
-          commento: row.commento,
-          voto: row.voto,
-          giorni_permanenza: row.giorni_permanenza,
-          recensione_creato_in: row.recensione_creato_in,
+          name: row.recensore,
+          comment: row.commento,
+          vote: row.voto,
+          days_of_stay: row.giorni_permanenza,
+          created_in: row.recensione_creato_in,
         });
       }
     });
@@ -192,16 +192,16 @@ const addFeedback = (req, res) => {
   const bodyApi = req.body;
 
   if (
-    !bodyApi.name ||
-    !bodyApi.email ||
-    !bodyApi.comment ||
-    bodyApi.vote === undefined || // Accettiamo 0 come valore valido
-    bodyApi.days_of_stay === undefined ||
-    bodyApi.id_real_estate === undefined
-  ) {
-    return res.status(400).json({ message: "Dati mancanti o non validi" });
-  }
-  
+  !bodyApi.name ||
+  !bodyApi.email ||
+  !bodyApi.comment ||
+  bodyApi.vote === undefined || // Accettiamo 0 come valore valido
+  bodyApi.days_of_stay === undefined ||
+  bodyApi.id_real_estate === undefined
+) {
+  return res.status(400).json({ message: "Dati mancanti o non validi" });
+}
+
 
   const sql = `
     INSERT INTO feedback 
