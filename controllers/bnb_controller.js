@@ -1,8 +1,9 @@
 // Importo file per connessione a db
 const database = require("../db_connection");
 
+
 //--- Callback index immobili ---\\
-const showRealEstate = (req, res) => {
+const showRealEstate = (req, res, next) => {
   // Faccio query per mostrarmi tutti gli immobili
   let sql = `SELECT real_estate.*, type_real_estate.type AS tipo 
              FROM real_estate 
@@ -11,15 +12,10 @@ const showRealEstate = (req, res) => {
 
   // Filtro ricerca
   const filters = req.query;//prelevo le query string
-  const params = [];
-  const conditions = [];
+  const params = [];        //verranno aggiunti i valori dei campi
+  const conditions = [];    //verranno aggiunti i nomi dei campi
 
   console.log(filters);
-
-  //  if (filters.search) {
-  //    conditions.push(`type_real_estate.type LIKE ?`);
-  //    params.push(`%${filters.search}%`);
-  //  }
 
   for (const key in req.query) {        //cicla tutte le chiavi in req.query
     if (key !== "search") {             //controlla che la chiave sia diversa da search
@@ -27,70 +23,37 @@ const showRealEstate = (req, res) => {
       params.push(`%${req.query[key]}%`);      //in params viene aggiunto il valore del campo 
     }
   }
-  console.log("condizioni " +conditions);
-  console.log("parametri " +params);
-  
+  //console.log("condizioni " +conditions);
+  //console.log("parametri " +params);
 
-  if (conditions.length > 0) { 
+
+  if (conditions.length > 0) {
     sql += ` WHERE ${conditions.join(" AND ")}`;   //concatena le condizioni mettendo un AND tra ciascuna
     //console.log(sql);
-    
   }
 
   // Invio query al database modificata in base a filtro ricerca
   database.query(sql, params, (err, result) => {
     if (err)
-      return res.status(500).json({ message: "Errore interno al server" });
-    return res.status(200).json(result);
+      return next(new Error(err.message))
+    else {
+      return res.status(200).json({
+        status: "succes",
+        data: result
+      });
+    }
+
   });
 };
 
 
-
-//--- Callback per salvare un immobile ---\\
-const storeRealEstate = (req, res) => {
-  // Prendo body dal richiesta API (oggetto)
-  const bodyApi = req.body;
-
-  // Query SQL da inviare al database
-  const sql = `INSERT INTO immobili (titolo,descrizione,stanze,letti,bagni,metri_quadrati,citta,indirizzo,tipo,immagine,prezzo,creato_in,id_proprietario) 
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)
-  `;
-
-  // Invio la query al database
-  database.query(
-    sql,
-    [
-      bodyApi.titolo,
-      bodyApi.descrizione,
-      bodyApi.stanze,
-      bodyApi.letti,
-      bodyApi.bagni,
-      bodyApi.metri_quadrati,
-      bodyApi.citta,
-      bodyApi.indirizzo,
-      bodyApi.tipo,
-      bodyApi.immagine,
-      bodyApi.prezzo,
-      bodyApi.id_proprietario,
-    ],
-    (err, result) => {
-      // Gestisco errore
-      if (err)
-        return res.status(500).json({ message: "Errore interno al server" });
-      // Gestisco la risposta se la chiamata al database va correttamente
-      return res
-        .status(200)
-        .json({ status: "Success", message: "Ho inserito il nuovo post" });
-    }
-  );
-};
-
-
+// -------------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------------------------------------
 
 //Callback per vedere i dettagli immobile
-const detailRealEstate = (req, res) => {
+const detailRealEstate = (req, res, next) => {
   const immobileSlug = req.params.slug;
+
   const sql = `
     SELECT real_estate.*, 
            type_real_estate.type AS tipo, 
@@ -107,10 +70,11 @@ const detailRealEstate = (req, res) => {
   `;
 
   database.query(sql, [immobileSlug], (err, result) => {
-    if (err) return res.status(500).json({ message: "Errore interno al server" });
+    if (err)
+      return next(new Error(err.message))
 
     if (result.length == 0) {
-      return res.status(404).json({ message: "Non c'è id che cerchi" });
+      return res.status(404).json({ message: "l'immobile non è disponibile" });
     }
 
     const immobile = {
@@ -149,7 +113,43 @@ const detailRealEstate = (req, res) => {
   });
 };
 
+// -------------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------------------------------------
 
+//--- Callback per salvare un immobile ---\\
+const storeRealEstate = (req, res, next) => {
+  // Prendo body dal richiesta API (oggetto)
+  const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate } = req.body;
+  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate);
+
+  // Query SQL da inviare al database
+  const sqlStore = `INSERT INTO real_estate (slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, created_in, id_type_real_estate) 
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)
+  `;
+  
+  const slug = title.split(" ").join("-"); // sostituisco gli spazi vuoti con un carattere (in questo caso "-")
+  console.log(slug);
+
+  //invio la query al database
+  database.query(
+    sqlStore, 
+    [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate], 
+    (err,result) => {
+      //gestisco l'errore
+      if(err) {
+        next(new Error(err.message));
+      }
+       // Gestisco la risposta se la chiamata al database va correttamente
+      return res.status(201).json({
+        status: "success",
+        message: "l'immobile è stato salvato",
+      });
+   })
+
+};
+
+// -------------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------------------------------------
 
 //Callback per salvare recensione immobile
 const addFeedback = (req, res) => {
@@ -192,8 +192,8 @@ const addFeedback = (req, res) => {
 // Esporto callbacks
 module.exports = {
   showRealEstate,
-  storeRealEstate,
   detailRealEstate,
+  storeRealEstate,
   addFeedback,
 
 };
