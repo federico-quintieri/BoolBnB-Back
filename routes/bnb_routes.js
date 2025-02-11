@@ -12,6 +12,6 @@ router.post("/", controller.storeRealEstate);
 router.get("/:slug", controller.detailRealEstate);
 
 //Endpoint per salvare la recensione dell'immobile
-router.post("/review/:id", controller.addFeedback);
+router.post("/review", controller.addFeedback);
 
 module.exports = router;
