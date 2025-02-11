@@ -140,9 +140,9 @@ const addReviewImmobile = (req, res) => {
   const bodyApi = req.body;
 
   const sql = `
-    INSERT INTO recensioni 
-    (nome, commento, voto, giorni_permanenza, creato_in, id_utente_interessato, id_proprietario, id_immobile) 
-    VALUES (?, ?, ?, ?, NOW(), ?, ?, ?);
+    INSERT INTO feedback 
+    (name, email, comment, vote, days_of_stay, created_in, id_real_estate) 
+    VALUES (?, ?, ?, ?, ?, NOW(), ?);
   `;
 
   database.query(
