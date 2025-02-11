@@ -25,9 +25,9 @@ const showRealEstate = (req, res, next) => {
   }
   //console.log("condizioni " +conditions);
   //console.log("parametri " +params);
-  
 
-  if (conditions.length > 0) { 
+
+  if (conditions.length > 0) {
     sql += ` WHERE ${conditions.join(" AND ")}`;   //concatena le condizioni mettendo un AND tra ciascuna
     //console.log(sql);
   }
@@ -35,14 +35,14 @@ const showRealEstate = (req, res, next) => {
   // Invio query al database modificata in base a filtro ricerca
   database.query(sql, params, (err, result) => {
     if (err)
-     return next (new Error (err.message))
-    else{
+      return next(new Error(err.message))
+    else {
       return res.status(200).json({
-        status:"succes",
+        status: "succes",
         data: result
       });
     }
-    
+
   });
 };
 
@@ -51,10 +51,9 @@ const showRealEstate = (req, res, next) => {
 // -------------------------------------------------------------------------------------------------------------------------------
 
 //Callback per vedere i dettagli immobile
-const detailRealEstate = (req, res) => {
+const detailRealEstate = (req, res, next) => {
   const immobileSlug = req.params.slug;
-  console.log(immobileSlug);
-  
+
   const sql = `
     SELECT real_estate.*, 
            type_real_estate.type AS tipo, 
@@ -71,10 +70,11 @@ const detailRealEstate = (req, res) => {
   `;
 
   database.query(sql, [immobileSlug], (err, result) => {
-    if (err) return res.status(500).json({ message: "Errore interno al server" });
+    if (err)
+      return next(new Error(err.message))
 
     if (result.length == 0) {
-      return res.status(404).json({ message: "Non c'è id che cerchi" });
+      return res.status(404).json({ message: "l'immobile non è disponibile" });
     }
 
     const immobile = {
@@ -117,42 +117,35 @@ const detailRealEstate = (req, res) => {
 // -------------------------------------------------------------------------------------------------------------------------------
 
 //--- Callback per salvare un immobile ---\\
-const storeRealEstate = (req, res) => {
+const storeRealEstate = (req, res, next) => {
   // Prendo body dal richiesta API (oggetto)
-  const bodyApi = req.body;
+  const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate } = req.body;
+  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate);
 
   // Query SQL da inviare al database
-  const sql = `INSERT INTO immobili (titolo,descrizione,stanze,letti,bagni,metri_quadrati,citta,indirizzo,tipo,immagine,prezzo,creato_in,id_proprietario) 
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)
+  const sqlStore = `INSERT INTO real_estate (slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, created_in, id_type_real_estate) 
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)
   `;
+  
+  const slug = title.split(" ").join("-"); // sostituisco gli spazi vuoti con un carattere (in questo caso "-")
+  console.log(slug);
 
-  // Invio la query al database
+  //invio la query al database
   database.query(
-    sql,
-    [
-      bodyApi.titolo,
-      bodyApi.descrizione,
-      bodyApi.stanze,
-      bodyApi.letti,
-      bodyApi.bagni,
-      bodyApi.metri_quadrati,
-      bodyApi.citta,
-      bodyApi.indirizzo,
-      bodyApi.tipo,
-      bodyApi.immagine,
-      bodyApi.prezzo,
-      bodyApi.id_proprietario,
-    ],
-    (err, result) => {
-      // Gestisco errore
-      if (err)
-        return res.status(500).json({ message: "Errore interno al server" });
-      // Gestisco la risposta se la chiamata al database va correttamente
-      return res
-        .status(200)
-        .json({ status: "Success", message: "Ho inserito il nuovo post" });
-    }
-  );
+    sqlStore, 
+    [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate], 
+    (err,result) => {
+      //gestisco l'errore
+      if(err) {
+        next(new Error(err.message));
+      }
+       // Gestisco la risposta se la chiamata al database va correttamente
+      return res.status(201).json({
+        status: "success",
+        message: "l'immobile è stato salvato",
+      });
+   })
+
 };
 
 // -------------------------------------------------------------------------------------------------------------------------------
