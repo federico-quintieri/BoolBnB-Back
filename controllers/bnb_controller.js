@@ -16,7 +16,6 @@ const showRealEstate = (req, res) => {
 
   console.log(filters);
 
-
   //  if (filters.search) {
   //    conditions.push(`type_real_estate.type LIKE ?`);
   //    params.push(`%${filters.search}%`);
@@ -28,8 +27,8 @@ const showRealEstate = (req, res) => {
       params.push(`%${req.query[key]}%`);      //in params viene aggiunto il valore del campo 
     }
   }
-  //console.log("condizioni " +conditions);
-  //console.log("parametri " +params);
+  console.log("condizioni " +conditions);
+  console.log("parametri " +params);
   
 
   if (conditions.length > 0) { 
