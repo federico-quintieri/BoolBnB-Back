@@ -122,29 +122,125 @@ const storeRealEstate = (req, res, next) => {
   const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate } = req.body;
   console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate);
 
+
+
+  //validazione dei dati
+
+  if (!owner_email.includes("@")) {
+    res.status(400).json({
+      status: "fail",
+      message: "l'email inserita non è valida"
+    })
+  }
+
+  if (title.trim().length < 3) {
+    res.status(400).json({
+      status: "fail",
+      message: "titolo non valido, inserire almeno 3 caratteri"
+    })
+  }
+
+  if (description.trim().length < 8) {
+    res.status(400).json({
+      status: "fail",
+      message: "descrizione non valida, inserire almeno 8 caratteri"
+    })
+  }
+
+  if (rooms < 1) {
+    res.status(400).json({
+      status: "fail",
+      message: "deve essere presente almeno una stanza"
+    })
+  }
+
+  if (beds < 1) {
+    res.status(400).json({
+      status: "fail",
+      message: "deve essere presente almeno un letto"
+    })
+  }
+
+  if (bathrooms < 1) {
+    res.status(400).json({
+      status: "fail",
+      message: "deve essere presente almeno un bagno (anche se in comune con altri)"
+    })
+  }
+
+  if (square_meters < 9) {
+    res.status(400).json({
+      status: "fail",
+      message: "la stanza deve essere di almeno 9 metri quadri"
+    })
+  }
+
+  if (city.trim().length < 1) {
+    res.status(400).json({
+      status: "fail",
+      message: "inserire il nome della città"
+    })
+  }
+
+  if (address.trim().length < 4) {
+    res.status(400).json({
+      status: "fail",
+      message: "indirizzo non valido"
+    })
+  }
+
+
+  //controllo se la tipologia di casa esiste
+  const sqlFindType = `
+          SELECT *
+          FROM type_real_estate
+          WHERE type_real_estate.id = ?`
+
+  database.query(
+    sqlFindType, [id_type_real_estate],
+    (err, result) => {
+
+      //gestisco l'errore
+      if (err) {
+        next(new Error(err.message));
+      }
+
+      if (result[0] === undefined) {
+        res.status(400).json({
+          status: "fail",
+          message: "tipologia inesistente inseriscine un'altra"
+        })
+      }
+
+      console.log(result[0]);
+    })
+
+
+
+
   // Query SQL da inviare al database
   const sqlStore = `INSERT INTO real_estate (slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, created_in, id_type_real_estate) 
   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP,?)
   `;
-  
+
   const slug = title.split(" ").join("-"); // sostituisco gli spazi vuoti con un carattere (in questo caso "-")
-  console.log(slug);
+
 
   //invio la query al database
-  database.query(
-    sqlStore, 
-    [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate], 
-    (err,result) => {
-      //gestisco l'errore
-      if(err) {
-        next(new Error(err.message));
-      }
-       // Gestisco la risposta se la chiamata al database va correttamente
-      return res.status(201).json({
-        status: "success",
-        message: "l'immobile è stato salvato",
-      });
-   })
+   database.query(
+     sqlStore, 
+     [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate], 
+     (err,result) => {
+       //gestisco l'errore
+       if(err) {
+         next(new Error(err.message));
+       }
+        //Gestisco la risposta se la chiamata al database va correttamente
+       return res.status(201).json({
+         status: "success",
+         message: "l'immobile è stato salvato",
+       });
+    })
 
 };
 
@@ -153,32 +249,41 @@ const storeRealEstate = (req, res, next) => {
 
 //Callback per salvare recensione immobile
 const addFeedback = (req, res) => {
-  // Prendo id immobile
-  const immobileID = parseInt(req.params.id);
-
-  // Prendo oggetto body dalla richiesta che contiene la recensione effettiva
   const bodyApi = req.body;
 
+  if (
+    !bodyApi.name ||
+    !bodyApi.email ||
+    !bodyApi.comment ||
+    bodyApi.vote === undefined || // Accettiamo 0 come valore valido
+    bodyApi.days_of_stay === undefined ||
+    bodyApi.id_real_estate === undefined
+  ) {
+    return res.status(400).json({ message: "Dati mancanti o non validi" });
+  }
+
+
   const sql = `
-    INSERT INTO recensioni 
-    (nome, commento, voto, giorni_permanenza, creato_in, id_utente_interessato, id_proprietario, id_immobile) 
-    VALUES (?, ?, ?, ?, NOW(), ?, ?, ?);
+    INSERT INTO feedback 
+    (name, email, comment, vote, days_of_stay, created_in, id_real_estate) 
+    VALUES (?, ?, ?, ?, ?, NOW(), ?);
   `;
 
   database.query(
     sql,
     [
-      bodyApi.nome,
-      bodyApi.commento,
-      bodyApi.voto,
-      bodyApi.giorni_permanenza,
-      bodyApi.id_utente_interessato,
-      bodyApi.id_proprietario,
-      immobileID,
+      bodyApi.name,
+      bodyApi.email, // Aggiunto email
+      bodyApi.comment,
+      bodyApi.vote,
+      bodyApi.days_of_stay, // Corretto il nome
+      bodyApi.id_real_estate,
     ],
     (err, result) => {
-      if (err)
+      if (err) {
+        console.error("Errore SQL:", err);
         return res.status(500).json({ message: "Errore interno al server" });
+      }
 
       return res.status(201).json({
         message: "Recensione salvata con successo",
