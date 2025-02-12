@@ -223,19 +223,19 @@ const storeRealEstate = (req, res, next) => {
 
 
   //invio la query al database
-   database.query(
-     sqlStore, 
-     [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate], 
-     (err,result) => {
-       //gestisco l'errore
-       if(err) {
-         next(new Error(err.message));
-       }
-        //Gestisco la risposta se la chiamata al database va correttamente
-       return res.status(201).json({
-         status: "success",
-         message: "l'immobile è stato salvato",
-       });
+  database.query(
+    sqlStore,
+    [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate],
+    (err, result) => {
+      //gestisco l'errore
+      if (err) {
+        next(new Error(err.message));
+      }
+      //Gestisco la risposta se la chiamata al database va correttamente
+      return res.status(201).json({
+        status: "success",
+        message: "l'immobile è stato salvato",
+      });
     })
 
 };
@@ -245,20 +245,69 @@ const storeRealEstate = (req, res, next) => {
 
 //Callback per salvare recensione immobile
 const addFeedback = (req, res) => {
-  const {name, email, comment, vote, days_of_stay, id_real_estate} = req.body
+  const { name, email, comment, vote, days_of_stay, id_real_estate } = req.body
   console.log(name, email, comment, vote, days_of_stay, id_real_estate);
-  
 
-  if (
-    !name ||
-    !email ||
-    !comment ||
-    vote === undefined || // Accettiamo 0 come valore valido
-    days_of_stay === undefined ||
-    id_real_estate === undefined
-  ) {
-    return res.status(400).json({ message: "Dati mancanti o non validi" });
+  //validazioni
+
+  if (name.trim().length < 3) {
+    res.status(400).json({
+      status: "fail",
+      message: "nome non valido, inserire almeno 3 caratteri"
+    })
   }
+
+  if (!email.includes("@")) {
+    res.status(400).json({
+      status: "fail",
+      message: "l'email inserita non è valida"
+    })
+  }
+
+  if (comment.trim().length < 8) {
+    res.status(400).json({
+      status: "fail",
+      message: "il commento non è valido, inserire almeno 8 caratteri"
+    })
+  }
+
+  if (vote < 0 || vote > 5) {
+    res.status(400).json({
+      status: "fail",
+      message: "valutazione non valida"
+    })
+  }
+
+  if (comment.trim().length < 8) {
+    res.status(400).json({
+      status: "fail",
+      message: "descrizione non valida, inserire almeno 8 caratteri"
+    })
+  }
+
+  //controllo se la tipologia di casa esiste
+  const sqlFindIdEstate = `
+          SELECT *
+          FROM real_estate
+          WHERE real_estate.id = ?`
+
+  database.query(
+    sqlFindIdEstate, [id_real_estate],
+    (err, result) => {
+
+      //gestisco l'errore
+      if (err) {
+        next(new Error(err.message));
+      }
+
+      if (result[0] === undefined) {
+        res.status(400).json({
+          status: "fail",
+          message: "immobile inesistente, inserirne un'altro"
+        })
+      }
+      console.log(result[0].id);
+    })
 
 
   const sql = `
@@ -267,28 +316,28 @@ const addFeedback = (req, res) => {
     VALUES (?, ?, ?, ?, ?, NOW(), ?);
   `;
 
-  database.query(
-    sql,
-    [
-      name,
-      email, // Aggiunto email
-      comment,
-      vote,
-      days_of_stay, // Corretto il nome
-      id_real_estate,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error("Errore SQL:", err);
-        return res.status(500).json({ message: "Errore interno al server" });
-      }
+   database.query(
+     sql,
+     [
+       name,
+       email, // Aggiunto email
+       comment,
+       vote,
+       days_of_stay,  //Corretto il nome
+       id_real_estate,
+     ],
+     (err, result) => {
+       if (err) {
+         console.error("Errore SQL:", err);
+         return res.status(500).json({ message: "Errore interno al server" });
+       }
 
-      return res.status(201).json({
-        message: "Recensione salvata con successo",
-      });
-    }
-  );
-};
+       return res.status(201).json({
+         message: "Recensione salvata con successo",
+       });
+     }
+   );
+ };
 
 // Esporto callbacks
 module.exports = {
