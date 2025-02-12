@@ -245,15 +245,17 @@ const storeRealEstate = (req, res, next) => {
 
 //Callback per salvare recensione immobile
 const addFeedback = (req, res) => {
-  const bodyApi = req.body;
+  const {name, email, comment, vote, days_of_stay, id_real_estate} = req.body
+  console.log(name, email, comment, vote, days_of_stay, id_real_estate);
+  
 
   if (
-    !bodyApi.name ||
-    !bodyApi.email ||
-    !bodyApi.comment ||
-    bodyApi.vote === undefined || // Accettiamo 0 come valore valido
-    bodyApi.days_of_stay === undefined ||
-    bodyApi.id_real_estate === undefined
+    !name ||
+    !email ||
+    !comment ||
+    vote === undefined || // Accettiamo 0 come valore valido
+    days_of_stay === undefined ||
+    id_real_estate === undefined
   ) {
     return res.status(400).json({ message: "Dati mancanti o non validi" });
   }
@@ -268,12 +270,12 @@ const addFeedback = (req, res) => {
   database.query(
     sql,
     [
-      bodyApi.name,
-      bodyApi.email, // Aggiunto email
-      bodyApi.comment,
-      bodyApi.vote,
-      bodyApi.days_of_stay, // Corretto il nome
-      bodyApi.id_real_estate,
+      name,
+      email, // Aggiunto email
+      comment,
+      vote,
+      days_of_stay, // Corretto il nome
+      id_real_estate,
     ],
     (err, result) => {
       if (err) {
