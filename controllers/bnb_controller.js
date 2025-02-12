@@ -115,10 +115,10 @@ const detailRealEstate = (req, res, next) => {
 //--- Callback per salvare un immobile ---\\
 const storeRealEstate = (req, res, next) => {
   // Prendo body dal richiesta API (oggetto)
-  const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate } = req.body;
-  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate);
+  const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address,  id_type_real_estate } = req.body;
+  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, id_type_real_estate);
 
-
+  const imageName = req.file.name;
 
   //validazione dei dati
 
@@ -225,7 +225,7 @@ const storeRealEstate = (req, res, next) => {
   //invio la query al database
   database.query(
     sqlStore,
-    [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, images, id_type_real_estate],
+    [slug, owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, imageName, id_type_real_estate],
     (err, result) => {
       //gestisco l'errore
       if (err) {
@@ -245,6 +245,7 @@ const storeRealEstate = (req, res, next) => {
 
 //Callback per salvare recensione immobile
 const addFeedback = (req, res) => {
+  
   const { name, email, comment, vote, days_of_stay, id_real_estate } = req.body
   console.log(name, email, comment, vote, days_of_stay, id_real_estate);
 

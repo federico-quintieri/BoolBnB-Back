@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const controller = require("../controllers/bnb_controller");
+const upload =require("../middleware/fileUpload")
 
 // Endpoint MostraImmobili
 router.get("/", controller.showRealEstate);
@@ -9,7 +10,7 @@ router.get("/", controller.showRealEstate);
 router.post("/", controller.storeRealEstate);
 
 //Endpoint per vedere i dettagli
-router.get("/:slug", controller.detailRealEstate);
+router.get("/:slug", upload.single("image"), controller.detailRealEstate);
 
 //Endpoint per salvare la recensione dell'immobile
 router.post("/review", controller.addFeedback);
