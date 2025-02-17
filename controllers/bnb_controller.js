@@ -1,5 +1,7 @@
 // Importo file per connessione a db
+const { log } = require("console");
 const database = require("../db_connection");
+const dns = require("dns"); // Importa il modulo 'dns' di Node.js, che permette di eseguire ricerche DNS
 
 
 //--- Callback index immobili ---\\
@@ -120,16 +122,25 @@ const detailRealEstate = (req, res, next) => {
 const storeRealEstate = (req, res, next) => {
   // Prendo body dal richiesta API (oggetto)
   const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address,  id_type_real_estate } = req.body;
-  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, id_type_real_estate);
-
-  const imageName = req.file.name;
+  
+  const imageName = req.file.filename.split(" ").join("-");
+  //console.log("nome immagine " + imageName);
+  
+  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, id_type_real_estate,imageName);
 
   //validazione dei dati
 
-  if (!owner_email.includes("@")) {
+  if (!owner_email.includes("@") || owner_email.includes(" ")) {
     res.status(400).json({
       status: "fail",
       message: "l'email inserita non è valida"
+    })
+  }
+
+  if(owner_name.trim().length < 1){
+    res.status(400).json({
+      status: "fail",
+      message: "il nome inserita non è valida"
     })
   }
 
@@ -161,7 +172,7 @@ const storeRealEstate = (req, res, next) => {
     })
   }
 
-  if (bathrooms < 1) {
+  if (bathrooms < 1 && bathrooms > rooms) {
     res.status(400).json({
       status: "fail",
       message: "deve essere presente almeno un bagno (anche se in comune con altri)"
@@ -189,6 +200,12 @@ const storeRealEstate = (req, res, next) => {
     })
   }
 
+  if(imageName === "undefined"){
+    res.status(400).json({
+      status: "fail",
+      message: "immagine non valida"
+    })
+  }
 
   //controllo se la tipologia di casa esiste
   const sqlFindType = `

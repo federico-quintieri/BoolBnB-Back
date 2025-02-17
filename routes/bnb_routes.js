@@ -7,10 +7,10 @@ const upload =require("../middleware/fileUpload")
 router.get("/", controller.showRealEstate);
 
 //Endpoint SalvaImmobile
-router.post("/", controller.storeRealEstate);
+router.post("/", upload.single("images"), controller.storeRealEstate);
 
 //Endpoint per vedere i dettagli
-router.get("/:slug", upload.single("image"), controller.detailRealEstate);
+router.get("/:slug",  controller.detailRealEstate);
 
 //Endpoint per salvare la recensione dell'immobile
 router.post("/review/:id", controller.addFeedback);
