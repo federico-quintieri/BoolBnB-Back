@@ -1,24 +1,13 @@
-const multer = require("multer");
-
-//setto le impostazioni di salvataggio
-const storage =multer.diskStorage({
-destination: (req,file,callbackFn) =>{
-
-    //impostazione della posizione del salvataggio del file
-    callbackFn(null, "public/images");
-},
-filename: (req,file ,callbackFn) =>{
-
-    //prendo il nome del file caricato
-    const originaleFileName= file.originalname;
-    //aggiungo la data per rendere il nome del file unico
-    const uniqueName = `${Date.now()}-${originaleFileName}`;
-    callbackFn(null, uniqueName);
-
-}   
-
+const multer = require('multer');
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public'); // Percorso in cui salvare le immagini
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Nome file univoco
+  },
 });
 
-const upload = multer({storage});
+const upload = multer({ storage: storage }).array('images', 10); // Accetta fino a 10 immagini
 
 module.exports = upload;
