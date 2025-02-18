@@ -117,15 +117,35 @@ const detailRealEstate = (req, res, next) => {
 //--- Callback per salvare un immobile ---\\
 const storeRealEstate = (req, res, next) => {
   // Prendo body dal richiesta API (oggetto)
-  const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address,  id_type_real_estate } = req.body;
-  
+  const { owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, id_type_real_estate } = req.body;
+
   const imageName = req.file.filename.split(" ").join("-");
-  //console.log("nome immagine " + imageName);
-  
-  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, id_type_real_estate,imageName);
+  console.log("email " + owner_email);
+
+  console.log(owner_email, owner_name, title, description, rooms, beds, bathrooms, square_meters, city, address, id_type_real_estate, imageName);
+
+  //funzione che controlla se il dominio della mail è valido
+  function verifyEmailDomain(email) {
+    return new Promise((resolve, reject) => {
+      // Estrae il dominio dall'email prendendo tutto dopo "@"
+      const domain = email.split('@')[1];
+
+      // Controlla se il dominio è presente
+      if (!domain) {
+        return resolve(false); // Email senza dominio non valida
+      }
+
+      // Usa il metodo resolveMx per ottenere i record MX del dominio
+      dns.resolveMx(domain, (err, addresses) => {
+        if (err || !addresses || addresses.length === 0) {
+          return resolve(false); // Se c'è un errore o non ci sono record MX, il dominio non è valido
+        }
+        resolve(true); // Il dominio è valido perché ha record MX
+      });
+    });
+  }
 
   //validazione dei dati
-
   if (!owner_email.includes("@") || owner_email.includes(" ")) {
     res.status(400).json({
       status: "fail",
@@ -133,7 +153,12 @@ const storeRealEstate = (req, res, next) => {
     })
   }
 
-  if(owner_name.trim().length < 1){
+  verifyEmailDomain(owner_email)
+    .then(isValid => console.log(isValid ? "Dominio valido" : "Dominio non valido"))
+    .catch(err => console.error("Errore:", err));
+
+
+  if (owner_name.trim().length < 1) {
     res.status(400).json({
       status: "fail",
       message: "il nome inserita non è valida"
@@ -196,7 +221,7 @@ const storeRealEstate = (req, res, next) => {
     })
   }
 
-  if(imageName === "undefined"){
+  if (imageName === "undefined") {
     res.status(400).json({
       status: "fail",
       message: "immagine non valida"
@@ -262,7 +287,7 @@ const storeRealEstate = (req, res, next) => {
 
 //Callback per salvare recensione immobile
 const addFeedback = (req, res) => {
-  
+
   const { name, email, comment, vote, days_of_stay, id_real_estate } = req.body
   console.log(name, email, comment, vote, days_of_stay, id_real_estate);
 
@@ -334,28 +359,28 @@ const addFeedback = (req, res) => {
     VALUES (?, ?, ?, ?, ?, NOW(), ?);
   `;
 
-   database.query(
-     sql,
-     [
-       name,
-       email, // Aggiunto email
-       comment,
-       vote,
-       days_of_stay,  //Corretto il nome
-       id_real_estate,
-     ],
-     (err, result) => {
-       if (err) {
-         console.error("Errore SQL:", err);
-         return res.status(500).json({ message: "Errore interno al server" });
-       }
+  database.query(
+    sql,
+    [
+      name,
+      email, // Aggiunto email
+      comment,
+      vote,
+      days_of_stay,  //Corretto il nome
+      id_real_estate,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Errore SQL:", err);
+        return res.status(500).json({ message: "Errore interno al server" });
+      }
 
-       return res.status(201).json({
-         message: "Recensione salvata con successo",
-       });
-     }
-   );
- };
+      return res.status(201).json({
+        message: "Recensione salvata con successo",
+      });
+    }
+  );
+};
 
 // Esporto callbacks
 module.exports = {
