@@ -1,5 +1,5 @@
 // Per usare le variabili d'ambiente
-require('dotenv').config();
+require("dotenv").config();
 // Importiamo dipendenze
 const express = require("express");
 const cors = require("cors");
@@ -14,7 +14,7 @@ app.use(
 );
 
 // Middleware per rendere la cartella pubblica accessibile da fuori
-app.use(express.static('public'));
+app.use(express.static("public"));
 
 // Middleware per convertire in JSON il body
 app.use(express.json());
@@ -24,7 +24,5 @@ app.use("/immobili", bnb_router);
 
 // Mettiamo in ascolto il server
 app.listen(port, () => {
-
-  console.log(`Sono in ascolto alla porta numero ${port}`)
-
+  console.log(`Sono in ascolto alla porta numero ${port}`);
 });
